@@ -4,172 +4,149 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import platform
-from matplotlib import font_manager, rc
 
-# --- 1. 한글/영문 통합 가독성 및 깨짐 방지 설정 ---
-@st.cache_resource
-def setup_environment():
-    # 운영체제별 폰트 자동 설정
-    system_os = platform.system()
-    font_candidates = [
-        "Malgun Gothic", "AppleGothic", "NanumGothic", 
-        "Noto Sans CJK KR", "Arial"
-    ]
-    
-    selected_font = "sans-serif"
-    for f in font_candidates:
-        if f in [font.name for font in font_manager.fontManager.ttflist]:
-            selected_font = f
-            break
-            
-    # Matplotlib 전역 설정
-    plt.rcParams['font.family'] = selected_font
-    plt.rcParams['axes.unicode_minus'] = False # 마이너스 기호 깨짐 방지
-    plt.rcParams['font.size'] = 10
-    
-    # Seaborn 테마 강제 적용
-    sns.set_theme(style="whitegrid", font=selected_font)
+# --- 1. 사용자 제공 한글 폰트 설정 적용 ---
+if platform.system() == 'Windows':
+    plt.rc('font', family='Malgun Gothic')
+elif platform.system() == 'Darwin': # Mac
+    plt.rc('font', family='AppleGothic')
 
-    # 전문적인 대시보드 스타일링
-    st.markdown("""
-        <style>
-        .main { background-color: #F8F9FA; }
-        .report-box {
-            background-color: white;
-            padding: 25px;
-            border-radius: 12px;
-            border: 1px solid #E9ECEF;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
-        }
-        .metric-card {
-            background-color: #E3F2FD;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            border-left: 5px solid #1565C0;
-        }
-        .step-title {
-            color: #1565C0;
-            font-weight: bold;
-            font-size: 1.1em;
-            margin-bottom: 10px;
-        }
-        </style>
+# 마이너스 기호 깨짐 방지
+plt.rcParams['axes.unicode_minus'] = False
+
+# --- 2. 디자인 및 가독성 개선 (CSS) ---
+st.set_page_config(page_title="금융 데이터 분석 센터", layout="wide")
+
+st.markdown("""
+    <style>
+    .main { background-color: #F9FAFB; }
+    .report-card {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+        border-top: 4px solid #0047AB;
+    }
+    .action-step {
+        background-color: #F0F4F8;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 5px solid #0047AB;
+        margin-bottom: 10px;
+    }
+    .step-header {
+        font-weight: bold;
+        color: #0047AB;
+        margin-bottom: 5px;
+    }
+    </style>
     """, unsafe_allow_html=True)
 
-setup_environment()
-
 # --- 사이드바 ---
-st.sidebar.title("📊 Financial Report")
-st.sidebar.info("분석할 리포트 유형을 선택하십시오.")
-selection = st.sidebar.radio("", [
-    "1. 기업 연체율 시차 분석 (Macro)",
-    "2. 고객 이탈 세그먼트 (Retail)",
-    "3. FDS 모델 개선 리포트 (Risk)"
+st.sidebar.title("📁 분석 리포트")
+selection = st.sidebar.radio("보고서 유형", [
+    "1. 기업 연체율 시차 분석",
+    "2. 신용카드 고객 이탈 분석",
+    "3. FDS 성능 개선 조치"
 ])
 
 # --- 섹션 1: 기업 연체율 ---
 if "1." in selection:
     st.title("📈 기업 연체율 및 금리 시차 분석")
-    st.markdown("<div class='report-box'>금리 변화가 기업 건전성에 미치는 영향력을 시차별로 분석하여 조기 경보 지표를 도출합니다.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='report-card'><b>보고서 개요:</b> 거시경제 지표인 금리와 기업의 건전성 사이의 상관관계를 시차별(Time-Lag)로 분석합니다.</div>", unsafe_allow_html=True)
 
+    # 레이아웃: 표(2/4) : 그래프(1/4) : 인사이트(1/4)
     col1, col2, col3 = st.columns([2, 1, 1])
-    
+
     with col1:
-        st.subheader("📊 데이터 기초 통계 요약")
+        st.subheader("📊 지표별 통계 요약")
         summary_df = pd.DataFrame({
-            "항목 (Variable)": ['기준금리', '기업대출금리', '가계대출금리', '기업연체율', '회사채수익률', 'CD수익률'],
-            "평균 (Mean)": [2.46, 4.27, 4.17, 0.53, 3.61, 2.83],
-            "변동계수 (CV)": [0.44, 0.21, 0.20, 0.33, 0.24, 0.34],
-            "최고치 (Max)": [3.50, 5.31, 5.08, 0.90, 5.49, 4.02]
+            "Variable (항목)": ['기준금리', '기업대출금리', '가계대출금리', '기업연체율', '회사채수익률', 'CD수익률'],
+            "Mean (평균)": [2.46, 4.27, 4.17, 0.53, 3.61, 2.83],
+            "Volatility (CV)": [0.44, 0.21, 0.20, 0.33, 0.24, 0.34],
+            "Max (최고치)": [3.50, 5.31, 5.08, 0.90, 5.49, 4.02]
         })
         st.table(summary_df)
 
     with col2:
-        st.subheader("🌡️ 선행 지표 상관도")
-        lag_corr = pd.DataFrame({"상관계수": [1.0, 0.69, 0.64, 0.59, -0.35]}, 
+        st.subheader("🌡️ 상관계수")
+        lag_data = pd.DataFrame({"상관계수": [1.0, 0.69, 0.64, 0.59, -0.35]}, 
                                 index=["연체율(T)", "금리(T-6)", "CD(T-6)", "금리(T-5)", "회사채(T-1)"])
-        fig, ax = plt.subplots(figsize=(4, 6))
-        sns.heatmap(lag_corr, annot=True, cmap='RdYlBu_r', ax=ax, cbar=False)
-        ax.set_title("Time-Lag Corr", fontsize=12)
+        fig, ax = plt.subplots(figsize=(4, 5))
+        sns.heatmap(lag_data, annot=True, cmap='coolwarm', ax=ax, cbar=False)
         st.pyplot(fig)
 
     with col3:
-        st.subheader("💡 분석 결과")
-        st.info("**6개월의 시차 확인**")
-        st.write("금리 인상 후 기업의 이자 부담이 임계치에 도달하여 연체로 이어지는 기간은 평균 6개월로 분석되었습니다.")
+        st.subheader("💡 Key Insight")
+        st.success("기업대출금리는 **6개월의 시차**를 두고 연체율과 0.69의 높은 상관관계를 보입니다. 이는 리스크 관리의 골든타임을 의미합니다.")
 
 # --- 섹션 2: 고객 이탈 ---
 elif "2." in selection:
     st.title("💳 신용카드 고객 이탈 패턴 분석")
-    st.markdown("<div class='report-box'>이탈 고객의 행동적 특징을 분석하여 이탈 방지를 위한 핵심 비즈니스 룰을 수립합니다.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='report-card'><b>보고서 개요:</b> 고객의 거래 빈도와 상담 연락 패턴을 분석하여 이탈 징후를 사전 포착합니다.</div>", unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([2, 1, 1])
-    
+
     with col1:
-        st.subheader("🔍 주요 집단 지표 비교")
+        st.subheader("🔍 집단 행동 비교")
         df_comp = pd.DataFrame({
-            "구분 (Segment)": ["이탈 (Attrited)", "유지 (Existing)"],
-            "거래 횟수 (Trans.)": [44.9, 68.7],
-            "상담 횟수 (Contact)": [2.97, 2.35],
-            "한도 소진 (Util.)": ["16.2%", "29.6%"]
+            "Segment (구분)": ["이탈 고객 (Attrited)", "유지 고객 (Existing)"],
+            "Trans. Ct (거래횟수)": [44.9, 68.7],
+            "Contact (상담횟수)": [2.97, 2.35],
+            "Utilization (이용률)": ["16.2%", "29.6%"]
         })
         st.table(df_comp)
-        st.error("**핵심 규칙:** 거래 55회 미만 & 한도소진 2.7% 이하 고객 → 타사 카드 주사용자로 분류 (이탈률 72%)")
+        st.error("**Rule:** 거래 55회 미만 & 이용률 2.7% 이하 → 이탈률 72%")
 
     with col2:
         st.subheader("📊 상담 횟수 분포")
         fig, ax = plt.subplots(figsize=(5, 8))
-        sns.barplot(x=["유지", "이탈"], y=[2.35, 2.97], palette="coolwarm", ax=ax)
-        ax.set_title("평균 상담 연락 횟수", fontsize=12)
+        sns.barplot(x=["유지", "이탈"], y=[2.35, 2.97], palette="Blues", ax=ax)
+        ax.set_title("평균 상담 횟수 비교")
         st.pyplot(fig)
 
     with col3:
         st.subheader("📢 대응 전략")
-        st.warning("**이탈 징후 감지**")
-        st.write("연락 횟수가 3회를 넘어서는 시점에서 소비 변화율을 감지하여 VIP 케어 프로모션을 즉시 실행해야 합니다.")
+        st.warning("상담 연락 3회 초과 시, 해당 고객의 이탈 확률이 급증하므로 전담 상담원 배정이 필요합니다.")
 
 # --- 섹션 3: FDS 개선 ---
 else:
-    st.title("🛡️ FDS 이상거래 탐지 성능 개선 리포트")
-    st.markdown("<div class='report-box'>데이터 불균형 해결과 변수 정제를 통해 탐지 시스템의 효율성을 극대화하였습니다.</div>", unsafe_allow_html=True)
+    st.title("🛡️ FDS 이상거래 탐지 모델 개선")
+    st.markdown("<div class='report-card'><b>보고서 개요:</b> 정밀도(Precision)를 3.6배 향상시킨 모델 최적화 과정과 개선 조치를 설명합니다.</div>", unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([2, 1, 1])
-    
+
     with col1:
-        st.subheader("🚀 모델 최적화 성과")
+        st.subheader("🚀 성능 개선 지표")
         perf_df = pd.DataFrame({
-            "성능 지표 (Metric)": ["정밀도 (Precision)", "재현율 (Recall)", "F1-Score", "오탐지율 (FAR)"],
-            "초기 모델": ["9.0%", "82.0%", "0.16", "High"],
-            "최종 개선": ["33.0%", "82.0%", "0.47", "Reduced (1/3.6)"]
+            "Metric (지표)": ["Precision (정밀도)", "Recall (재현율)", "오탐지 개선"],
+            "기존 모델": ["9.0%", "82.0%", "-"],
+            "개선 모델": ["33.0%", "82.0%", "3.6배 향상"]
         })
         st.table(perf_df)
 
     with col2:
-        st.subheader("📊 변수 기여도 (Top 5)")
+        st.subheader("📊 변수 기여도")
         top_v = pd.Series([803, 669, 661, 643, 639], index=["V4", "V27", "V18", "V8", "V1"])
         fig, ax = plt.subplots(figsize=(5, 8))
-        top_v.sort_values().plot(kind='barh', color='#0D47A1', ax=ax)
-        ax.set_title("모델 기여도 점수", fontsize=12)
+        top_v.sort_values().plot(kind='barh', color='#0047AB', ax=ax)
+        ax.set_title("핵심 변수 점수")
         st.pyplot(fig)
 
     with col3:
         st.subheader("🛠️ 3단계 개선 조치")
-        
         st.markdown("""
-        <div class='metric-card'>
-            <div class='step-title'>Step 1. 변수 다이어트 (Feature Selection)</div>
-            중요도가 낮은 V20, V21 등 노이즈 변수 5종을 제거하여 모델 혼선을 방어함.
-        </div>
-        <br>
-        <div class='metric-card'>
-            <div class='step-title'>Step 2. 데이터 불균형 해결 (SMOTE)</div>
-            0.17%에 불과한 사기 데이터를 합성하여 정상 데이터와 1:1 비율로 학습.
-        </div>
-        <br>
-        <div class='metric-card'>
-            <div class='step-title'>Step 3. 임계치 튜닝 (Threshold)</div>
-            탐지 임계치를 0.9로 상향하여 고객 불편(오탐지)을 최소화하고 탐지력 유지.
-        </div>
+            <div class='action-step'>
+                <div class='step-header'>Step 1. 변수 제거 (Diet)</div>
+                중요도가 낮은 V20, V21 등 노이즈 변수를 제거하여 모델 정밀도 확보.
+            </div>
+            <div class='action-step'>
+                <div class='step-header'>Step 2. 불균형 보정 (SMOTE)</div>
+                0.17%의 희소 데이터를 합성하여 정상/사기 비율을 최적화함.
+            </div>
+            <div class='action-step'>
+                <div class='step-header'>Step 3. 임계치 튜닝</div>
+                탐지 임계치를 0.9로 조정하여 고객 불편(오탐지)을 획기적으로 낮춤.
+            </div>
         """, unsafe_allow_html=True)
