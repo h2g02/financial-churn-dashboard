@@ -96,7 +96,7 @@ def run_project_3():
     st.title("🛡️ Real-time Fraud Detection System (FDS)")
     
     try:
-        df_fraud = pd.read_csv('Include/포폴3_Data/creditcard.csv')
+        df_fraud = pd.read_csv('Include/포폴3_Data/credit_data_small.csv')
         
         st.subheader("Data Imbalance Challenge")
         fraud_counts = df_fraud['Class'].value_counts()
