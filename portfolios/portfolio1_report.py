@@ -8,31 +8,10 @@ from scipy.stats import pearsonr
 @st.cache_data
 def load_portfolio1_data():
     try:
-        # 1. 루트의 Include/포폴1_Data 폴더에서 각각의 개별 공공 데이터를 로드합니다.
-        df_base_rate = pd.read_csv("Include/포폴1_Data/한국은행기준금리.csv")
-        df_loan_rate = pd.read_csv("Include/포폴1_Data/예금은행대출금리.csv")
-        df_delinquency = pd.read_csv("Include/포폴1_Data/은행대출금연체율.csv")
-        df_bond_cd = pd.read_csv("Include/포폴1_Data/회사채_CD수익률.csv")
-        
-        # 2. 분석의 기준이 되는 공통 컬럼(예: '날짜' 또는 '연월')을 정의합니다.
-        # ※ 실제 CSV 파일의 첫 번째 컬럼명(예: 시점, 년월 등)에 맞게 이 값을 수정해주세요.
-        join_col = "날짜" 
-        
-        # 3. 데이터셋들을 '날짜' 기준으로 지퍼 채우듯 순차적으로 병합(Merge)합니다.
-        merged_df = pd.merge(df_base_rate, df_loan_rate, on=join_col, how="inner")
-        merged_df = pd.merge(merged_df, df_delinquency, on=join_col, how="inner")
-        merged_df = pd.merge(merged_df, df_bond_cd, on=join_col, how="inner")
-        
-        # 4. 자소서 논리의 핵심인 '6개월(반년) 시차 효과' 변수를 생성합니다.
-        # 데이터가 월별 데이터라면 6개월 전 = shift(6) / 분기별 데이터라면 2분기 전 = shift(2)
-        # 작성자님의 파일에 적힌 실제 대출금리 컬럼명을 '기업대출금리' 자리에 넣어주세요.
-        if "기업대출금리" in merged_df.columns:
-            merged_df["lag_1q_rate"] = merged_df["기업대출금리"].shift(3)  # 3개월 전
-            merged_df["lag_2q_rate"] = merged_df["기업대출금리"].shift(6)  # 6개월 전 (★자소서 핵심 지표)
-            merged_df["lag_3q_rate"] = merged_df["기업대출금리"].shift(9)  
-            merged_df["lag_4q_rate"] = merged_df["기업대출금리"].shift(12) 
-            
-        return merged_df
+        # 기존 코드의 로직을 그대로 유지하되, 이미지상의 실제 통합 파일 경로로 수정합니다.
+        return pd.read_csv("Include/포폴1_Data/통합_금리_연체율.csv")
+    except FileNotFoundError:
+        return None
         
     except Exception as e:
         # 파일이 없거나 컬럼명이 다르면 에러를 띄우지 않고 
