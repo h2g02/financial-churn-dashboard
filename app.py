@@ -8,7 +8,6 @@ import os
 import urllib.request
 
 # --- [점검] 1. 한글 깨짐 방지: 안전한 폰트 다운로드 방식 ---
-@st.sidebar.skip
 @st.cache_resource
 def setup_safe_korean_env():
     # 1. Seaborn 테마 설정
