@@ -8,6 +8,8 @@ import os
 import urllib.request
 
 # --- [점검] 1. 한글 깨짐 방지: 안전한 폰트 다운로드 방식 ---
+@st.sidebar.skip
+@st.cache_resource
 def setup_safe_korean_env():
     # 1. Seaborn 테마 설정
     sns.set_theme(style='whitegrid')
@@ -19,7 +21,7 @@ def setup_safe_korean_env():
     if not os.path.exists(font_path):
         urllib.request.urlretrieve(font_url, font_path)
     
-    # 3. 글로벌 설정을 절대 건드리지 않고, 오직 폰트 파일 속성만 리턴 (가장 안전)
+    # 오직 폰트 파일 속성만 리턴 (가장 안전)
     return fm.FontProperties(fname=font_path)
 
 # 폰트 속성 객체만 안전하게 획득
