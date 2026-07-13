@@ -1,35 +1,11 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import matplotlib.font_manager as fm
-import os
-import urllib.request
 
-# --- [점검] 1. 한글 깨짐 방지: 안전한 폰트 다운로드 방식 ---
-@st.cache_resource
-def setup_safe_korean_env():
-    # 1. Seaborn 테마 설정
-    sns.set_theme(style='whitegrid')
-    
-    # 2. 나눔 고딕 폰트 다운로드
-    font_url = "https://github.com/google/fonts/raw/main/ofl/nanumgothic/NanumGothic-Regular.ttf"
-    font_path = os.path.join(os.path.dirname(__file__), "NanumGothic.ttf")
-    
-    if not os.path.exists(font_path):
-        urllib.request.urlretrieve(font_url, font_path)
-    
-    # 오직 폰트 파일 속성만 리턴 (가장 안전)
-    return fm.FontProperties(fname=font_path)
-
-# 폰트 속성 객체만 안전하게 획득
-nanum_prop = setup_safe_korean_env()
-
-# --- 2. 페이지 레이아웃 설정 ---
+# --- 1. 페이지 레이아웃 설정 (최상단 유지) ---
 st.set_page_config(page_title="금융 데이터 리포트", layout="wide")
 
-# CSS 스타일링
+# CSS 스타일링 (대시보드 예술성 유지)
 st.markdown("""
     <style>
     .report-card { background-color: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid #0047AB; }
@@ -38,7 +14,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. 사이드바 ---
+# --- 2. 사이드바 구성 ---
 st.sidebar.title("📁 분석 포트폴리오")
 selection = st.sidebar.radio("보고서 선택", ["1. 기업 연체율 시차 분석", "2. 신용카드 고객 이탈 분석", "3. FDS 성능 개선 조치"])
 
@@ -61,19 +37,13 @@ if "1." in selection:
 
     with col2:
         st.subheader("🌡️ 시차 상관계수")
-        lag_data = pd.DataFrame({"상관계수": [1.00, 0.69, 0.64, 0.59, -0.35]}, 
-                                index=["기업연체율(T)", "금리(T-6)", "CD(T-6)", "금리(T-5)", "회사채(T-1)"])
+        # 데이터프레임 구조 생성
+        lag_data = pd.DataFrame({
+            "상관계수": [1.00, 0.69, 0.64, 0.59, -0.35]
+        }, index=["기업연체율(T)", "금리(T-6)", "CD(T-6)", "금리(T-5)", "회사채(T-1)"])
         
-        fig, ax = plt.subplots(figsize=(4, 5))
-        sns.heatmap(lag_data, annot=True, cmap='RdYlBu_r', ax=ax, cbar=False, 
-                    annot_kws={"size": 11, "weight": "bold"})
-        
-        # 축 라벨 및 제목 폰트 직접 수동 지정 (충돌 방지)
-        ax.set_title("시차별 상관계수", fontproperties=nanum_prop, fontsize=14, pad=15)
-        ax.set_ylabel("분석 지표 (Time-Lag)", fontproperties=nanum_prop, fontsize=12)
-        plt.setp(ax.get_yticklabels(), fontproperties=nanum_prop)
-        
-        st.pyplot(fig)
+        # 안전한 내장 차트로 시각화
+        st.bar_chart(lag_data, color="#0047AB")
 
     with col3:
         st.subheader("💡 분석 결과")
@@ -98,17 +68,11 @@ elif "2." in selection:
 
     with col2:
         st.subheader("📊 상담 횟수 비교")
-        fig, ax = plt.subplots(figsize=(5, 6))
+        chart_data = pd.DataFrame({
+            "평균 연락 건수": [2.35, 2.97]
+        }, index=["유지", "이탈"])
         
-        # [해결] palette와 hue를 매핑하고 에러 로그가 나던 부분을 완벽하게 차단
-        sns.barplot(x=["유지", "이탈"], y=[2.35, 2.97], hue=["유지", "이탈"], palette="coolwarm", ax=ax, legend=False)
-        
-        ax.set_title("집단별 평균 연락 횟수", fontproperties=nanum_prop, fontsize=12)
-        ax.set_xlabel("고객 집단", fontproperties=nanum_prop)
-        ax.set_ylabel("평균 연락 건수", fontproperties=nanum_prop)
-        plt.setp(ax.get_xticklabels(), fontproperties=nanum_prop)
-        
-        st.pyplot(fig)
+        st.bar_chart(chart_data, color="#0047AB")
 
     with col3:
         st.subheader("📢 마케팅 제언")
@@ -132,17 +96,11 @@ else:
 
     with col2:
         st.subheader("📊 변수 기여도")
-        top_v = pd.Series([803, 669, 661, 643, 639], index=["V4", "V27", "V18", "V8", "V1"])
+        top_v = pd.DataFrame({
+            "중요도 점수": [639, 643, 661, 669, 803]
+        }, index=["V1", "V8", "V18", "V27", "V4"])
         
-        fig, ax = plt.subplots(figsize=(5, 6))
-        top_v.sort_values().plot(kind='barh', color='#0047AB', ax=ax)
-        
-        ax.set_title("핵심 탐지 변수 Top 5", fontproperties=nanum_prop, fontsize=12)
-        ax.set_xlabel("중요도 점수", fontproperties=nanum_prop)
-        ax.set_ylabel("PCA 변수명", fontproperties=nanum_prop)
-        plt.setp(ax.get_yticklabels(), fontproperties=nanum_prop)
-        
-        st.pyplot(fig)
+        st.bar_chart(top_v, color="#0047AB")
 
     with col3:
         st.subheader("🛠️ 개선 조치 요약")
