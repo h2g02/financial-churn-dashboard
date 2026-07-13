@@ -8,7 +8,7 @@ import os
 import urllib.request
 
 # --- [점검] 1. 한글 깨짐 방지: 나눔 폰트 다운로드 및 글로벌 설정 ---
-@st.cache_resource
+# @st.cache_resource
 def setup_full_korean_env():
     # 1. Seaborn 테마 설정을 가장 먼저 수행 (폰트 설정을 덮어쓰지 않도록 함)
     sns.set_theme(style='whitegrid')
