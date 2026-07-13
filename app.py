@@ -13,18 +13,18 @@ def setup_full_korean_env():
     # 1. Seaborn 테마 설정을 가장 먼저 수행 (폰트 설정을 덮어쓰지 않도록 함)
     sns.set_theme(style='whitegrid')
     
-    # 2. 나눔 고딕 폰트 다운로드
+    # 2. 나눔 고딕 폰트 다운로드 (안전한 파일명 설정)
     font_url = "https://github.com/google/fonts/raw/main/ofl/nanumgothic/NanumGothic-Regular.ttf"
-    font_path = "NanumGothic.ttf"
+    font_path = os.path.join(os.path.dirname(__file__), "NanumGothic.ttf")
+    
     if not os.path.exists(font_path):
         urllib.request.urlretrieve(font_url, font_path)
     
-    # 3. 폰트 매니저 등록
-    fe = fm.FontEntry(fname=font_path, name='NanumGothic')
-    fm.fontManager.ttflist.insert(0, fe)
+    # 3. 폰트 매니저에 안전하게 폰트 파일 경로 등록 (insert 대신 addfont 사용)
+    fm.fontManager.addfont(font_path)
     
-    # 4. 글로벌 rcParams 설정 (전체 폰트 및 마이너스 기호)
-    plt.rcParams['font.family'] = fe.name
+    # 4. 글로벌 rcParams 설정 (addfont로 등록했기 때문에 이름만 지정하면 됩니다)
+    plt.rcParams['font.family'] = 'NanumGothic'
     plt.rcParams['axes.unicode_minus'] = False
     
     # 5. 개별 위젯용 FontProperties 객체 생성 (축 라벨 강제 적용용)
