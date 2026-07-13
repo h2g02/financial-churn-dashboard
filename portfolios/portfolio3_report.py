@@ -5,7 +5,7 @@ import numpy as np
 @st.cache_data
 def load_portfolio3_data():
     try:
-        return pd.read_csv("data/portfolio3_fraud.csv")
+        return pd.read_csv("Include/포폴3_Data/credit_card_small.csv")
     except FileNotFoundError:
         return None
 
