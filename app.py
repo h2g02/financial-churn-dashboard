@@ -7,36 +7,28 @@ import matplotlib.font_manager as fm
 import os
 import urllib.request
 
-# --- [점검] 1. 한글 깨짐 방지: 나눔 폰트 다운로드 및 글로벌 설정 ---
-# @st.cache_resource
-def setup_full_korean_env():
-    # 1. Seaborn 테마 설정을 가장 먼저 수행 (폰트 설정을 덮어쓰지 않도록 함)
+# --- [점검] 1. 한글 깨짐 방지: 안전한 폰트 다운로드 방식 ---
+def setup_safe_korean_env():
+    # 1. Seaborn 테마 설정
     sns.set_theme(style='whitegrid')
     
-    # 2. 나눔 고딕 폰트 다운로드 (안전한 파일명 설정)
+    # 2. 나눔 고딕 폰트 다운로드
     font_url = "https://github.com/google/fonts/raw/main/ofl/nanumgothic/NanumGothic-Regular.ttf"
     font_path = os.path.join(os.path.dirname(__file__), "NanumGothic.ttf")
     
     if not os.path.exists(font_path):
         urllib.request.urlretrieve(font_url, font_path)
     
-    # 3. 폰트 매니저에 안전하게 폰트 파일 경로 등록 (insert 대신 addfont 사용)
-    fm.fontManager.addfont(font_path)
-    
-    # 4. 글로벌 rcParams 설정 (addfont로 등록했기 때문에 이름만 지정하면 됩니다)
-    plt.rcParams['font.family'] = 'NanumGothic'
-    plt.rcParams['axes.unicode_minus'] = False
-    
-    # 5. 개별 위젯용 FontProperties 객체 생성 (축 라벨 강제 적용용)
+    # 3. 글로벌 설정을 절대 건드리지 않고, 오직 폰트 파일 속성만 리턴 (가장 안전)
     return fm.FontProperties(fname=font_path)
 
-# 폰트 속성 객체 획득
-nanum_prop = setup_full_korean_env()
+# 폰트 속성 객체만 안전하게 획득
+nanum_prop = setup_safe_korean_env()
 
 # --- 2. 페이지 레이아웃 설정 ---
 st.set_page_config(page_title="금융 데이터 리포트", layout="wide")
 
-# CSS 스타일링 (예술성 보강)
+# CSS 스타일링
 st.markdown("""
     <style>
     .report-card { background-color: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid #0047AB; }
@@ -54,7 +46,6 @@ if "1." in selection:
     st.title("📈 기업 연체율 및 금리 시차 분석")
     st.markdown("<div class='report-card'><b>분석 요약:</b> 금리 지표가 기업 부실에 미치는 영향을 시차별로 정량화하여 리스크 관리의 근거를 제시합니다.</div>", unsafe_allow_html=True)
 
-    # 레이아웃 비율: 표 1/2(2), 그래프 1/4(1), 인사이트 1/4(1)
     col1, col2, col3 = st.columns([2, 1, 1])
 
     with col1:
@@ -73,14 +64,13 @@ if "1." in selection:
                                 index=["기업연체율(T)", "금리(T-6)", "CD(T-6)", "금리(T-5)", "회사채(T-1)"])
         
         fig, ax = plt.subplots(figsize=(4, 5))
-        # 히트맵 그리기
         sns.heatmap(lag_data, annot=True, cmap='RdYlBu_r', ax=ax, cbar=False, 
                     annot_kws={"size": 11, "weight": "bold"})
         
-        # [강제 적용] 축 라벨 및 제목 폰트 수동 지정
+        # 축 라벨 및 제목 폰트 직접 수동 지정 (충돌 방지)
         ax.set_title("시차별 상관계수", fontproperties=nanum_prop, fontsize=14, pad=15)
         ax.set_ylabel("분석 지표 (Time-Lag)", fontproperties=nanum_prop, fontsize=12)
-        plt.setp(ax.get_yticklabels(), fontproperties=nanum_prop) # y축 항목 강제 적용
+        plt.setp(ax.get_yticklabels(), fontproperties=nanum_prop)
         
         st.pyplot(fig)
 
@@ -107,20 +97,21 @@ elif "2." in selection:
 
     with col2:
         st.subheader("📊 상담 횟수 비교")
-        fig, ax = plt.subplots(figsize=(5, 8))
-        sns.barplot(x=["유지", "이탈"], y=[2.35, 2.97], palette="coolwarm", ax=ax)
+        fig, ax = plt.subplots(figsize=(5, 6))
         
-        # [강제 적용] 축 라벨 및 제목 폰트 수동 지정
+        # [해결] palette와 hue를 매핑하고 에러 로그가 나던 부분을 완벽하게 차단
+        sns.barplot(x=["유지", "이탈"], y=[2.35, 2.97], hue=["유지", "이탈"], palette="coolwarm", ax=ax, legend=False)
+        
         ax.set_title("집단별 평균 연락 횟수", fontproperties=nanum_prop, fontsize=12)
         ax.set_xlabel("고객 집단", fontproperties=nanum_prop)
         ax.set_ylabel("평균 연락 건수", fontproperties=nanum_prop)
-        plt.setp(ax.get_xticklabels(), fontproperties=nanum_prop) # x축 항목 강제 적용
+        plt.setp(ax.get_xticklabels(), fontproperties=nanum_prop)
         
         st.pyplot(fig)
 
     with col3:
         st.subheader("📢 마케팅 제언")
-        st.warning("상담 횟수가 3회를 초과하는 고객군은 불만이 누적된 상태이므로 즉각적인 케어가 필요합니다.")
+        st.success("상담 횟수가 3회를 초과하는 고객군은 불만이 누적된 상태이므로 즉각적인 케어가 필요합니다.")
 
 # --- 섹션 3: FDS 개선 ---
 else:
@@ -141,13 +132,14 @@ else:
     with col2:
         st.subheader("📊 변수 기여도")
         top_v = pd.Series([803, 669, 661, 643, 639], index=["V4", "V27", "V18", "V8", "V1"])
-        fig, ax = plt.subplots(figsize=(5, 8))
+        
+        fig, ax = plt.subplots(figsize=(5, 6))
         top_v.sort_values().plot(kind='barh', color='#0047AB', ax=ax)
         
-        # [강제 적용] 축 라벨 및 제목 폰트 수동 지정
         ax.set_title("핵심 탐지 변수 Top 5", fontproperties=nanum_prop, fontsize=12)
         ax.set_xlabel("중요도 점수", fontproperties=nanum_prop)
         ax.set_ylabel("PCA 변수명", fontproperties=nanum_prop)
+        plt.setp(ax.get_yticklabels(), fontproperties=nanum_prop)
         
         st.pyplot(fig)
 
